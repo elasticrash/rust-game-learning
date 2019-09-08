@@ -20,18 +20,15 @@ use piston::input::*;
 use piston::window::WindowSettings;
 #[cfg(feature = "include_sdl2")]
 use sdl2_window::Sdl2Window as AppWindow;
-
-pub struct Beam {
-    x: f64,
-    y: f64,
-}
+mod models;
 
 pub struct App {
     gl: GlGraphics, // OpenGL drawing backend.
     rotation: f64,  // Rotation for the square.
-    x_movement: f64,
-    y_movement: f64,
-    beams: Vec<Beam>,
+    x_ship_movement: f64,
+    y_ship_movement: f64, // TODO create ship struct
+    beams: Vec<models::beam::Beam>,
+    rocks: Vec<models::rock::Rock>,
 }
 
 impl App {
@@ -41,8 +38,8 @@ impl App {
         const GRAYISH: [f32; 4] = [0.3, 0.35, 0.31, 1.0];
 
         let rotation = self.rotation;
-        let x_movement = self.x_movement;
-        let y_movement = self.y_movement;
+        let x_ship_movement = self.x_ship_movement;
+        let y_ship_movement = self.y_ship_movement;
         let beams = &self.beams;
         let (x, y) = (args.window_size[0] / 2.0, args.window_size[1] / 2.0);
 
@@ -54,7 +51,7 @@ impl App {
                 .transform
                 .trans(x, y)
                 .rot_rad(rotation)
-                .trans(-x_movement, -y_movement);
+                .trans(-x_ship_movement, -y_ship_movement);
 
             // SHIP
             let ship = &[
@@ -105,12 +102,12 @@ impl App {
 
     fn update_movement_x(&mut self, _move: f64) {
         // Rotate 2 radians per second.
-        self.x_movement += _move;
+        self.x_ship_movement += _move;
     }
 
     fn update_movement_y(&mut self, _move: f64) {
         // Rotate 2 radians per second.
-        self.y_movement += _move;
+        self.y_ship_movement += _move;
     }
 
     fn update(&mut self, args: &UpdateArgs) {
@@ -133,9 +130,10 @@ fn main() {
     let mut app = App {
         gl: GlGraphics::new(opengl),
         rotation: 0.0,
-        x_movement: 0.0,
-        y_movement: 0.0,
+        x_ship_movement: 0.0,
+        y_ship_movement: 0.0,
         beams: Vec::new(),
+        rocks: Vec::new()
     };
 
     let mut _move: f64 = 0.0;
@@ -168,9 +166,9 @@ fn main() {
             }
 
             if key == Key::Space {
-                app.beams.push(Beam {
-                    x: -app.x_movement,
-                    y: app.y_movement,
+                app.beams.push(models::beam::Beam {
+                    x: -app.x_ship_movement,
+                    y: app.y_ship_movement,
                 });
             }
         };
