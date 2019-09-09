@@ -24,9 +24,7 @@ mod models;
 
 pub struct App {
     gl: GlGraphics, // OpenGL drawing backend.
-    rotation: f64,  // Rotation for the square.
-    x_ship_movement: f64,
-    y_ship_movement: f64, // TODO create ship struct
+    ship: models::ship::Ship,
     beams: Vec<models::beam::Beam>,
     rocks: Vec<models::rock::Rock>,
 }
@@ -37,21 +35,16 @@ impl App {
 
         const GRAYISH: [f32; 4] = [0.3, 0.35, 0.31, 1.0];
 
-        let rotation = self.rotation;
-        let x_ship_movement = self.x_ship_movement;
-        let y_ship_movement = self.y_ship_movement;
+        let ship = &self.ship;
         let beams = &self.beams;
+        let rocks = &self.rocks;
         let (x, y) = (args.window_size[0] / 2.0, args.window_size[1] / 2.0);
 
         self.gl.draw(args.viewport(), |c, gl| {
             // Clear the screen.
             clear(GRAYISH, gl);
 
-            let transform = c
-                .transform
-                .trans(x, y)
-                .rot_rad(rotation)
-                .trans(-x_ship_movement, -y_ship_movement);
+            let transform = c.transform.trans(x, y).trans(-ship.x, -ship.y);
 
             // SHIP
             let ship = &[
@@ -88,31 +81,47 @@ impl App {
 
             //BEAM
             for beam in beams {
-                let beam_transform = c
-                    .transform
-                    .trans(x, y)
-                    .rot_rad(rotation)
-                    .trans(beam.x, -beam.y);
-
+                let beam_transform = c.transform.trans(x, y).trans(beam.x, -beam.y);
                 let square = rectangle::square(20.0, -30.0, 5.0);
                 rectangle(RED, square, beam_transform, gl);
+            }
+
+            //BEAM
+            for rock in rocks {
+                let rock_transform = c.transform.trans(x, y).trans(rock.x, -rock.y);
+                let square = rectangle::square(20.0, -30.0, 15.0);
+                rectangle(RED, square, rock_transform, gl);
             }
         });
     }
 
     fn update_movement_x(&mut self, _move: f64) {
         // Rotate 2 radians per second.
-        self.x_ship_movement += _move;
+        self.ship.x += _move;
     }
 
     fn update_movement_y(&mut self, _move: f64) {
         // Rotate 2 radians per second.
-        self.y_ship_movement += _move;
+        self.ship.y += _move;
     }
 
     fn update(&mut self, args: &UpdateArgs) {
         for beam in &mut self.beams {
             beam.y += 50.0 * args.dt;
+        }
+
+        if ((args.dt * 10000000.0) as i64) % 8 == 0 {
+            let new_rock = models::rock::Rock {
+                x: -40.0,
+                y: 150.0,
+                shape: Vec::new(),
+            };
+
+            self.rocks.push(new_rock);
+        }
+
+        for rock in &mut self.rocks {
+            rock.y -= 50.0 * args.dt;
         }
     }
 }
@@ -129,11 +138,9 @@ fn main() {
     // Create a new game and run it.
     let mut app = App {
         gl: GlGraphics::new(opengl),
-        rotation: 0.0,
-        x_ship_movement: 0.0,
-        y_ship_movement: 0.0,
+        ship: models::ship::Ship { x: 0.0, y: 0.0 },
         beams: Vec::new(),
-        rocks: Vec::new()
+        rocks: Vec::new(),
     };
 
     let mut _move: f64 = 0.0;
@@ -150,25 +157,25 @@ fn main() {
 
         if let Some(Button::Keyboard(key)) = e.press_args() {
             if key == Key::Up {
-                app.update_movement_y(2.5);
+                app.update_movement_y(5.5);
             }
 
             if key == Key::Down {
-                app.update_movement_y(-2.5);
+                app.update_movement_y(-5.5);
             }
 
             if key == Key::Left {
-                app.update_movement_x(2.5);
+                app.update_movement_x(5.5);
             }
 
             if key == Key::Right {
-                app.update_movement_x(-2.5);
+                app.update_movement_x(-5.5);
             }
 
             if key == Key::Space {
                 app.beams.push(models::beam::Beam {
-                    x: -app.x_ship_movement,
-                    y: app.y_ship_movement,
+                    x: -app.ship.x,
+                    y: app.ship.y,
                 });
             }
         };
