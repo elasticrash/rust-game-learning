@@ -22,9 +22,12 @@ use piston::window::WindowSettings;
 use sdl2_window::Sdl2Window as AppWindow;
 mod models;
 
+use models::shape::Shape as ShapeGeometry;
+use models::ship::Ship as SpaceShip;
+
 pub struct App {
     gl: GlGraphics, // OpenGL drawing backend.
-    ship: models::ship::Ship,
+    ship: SpaceShip,
     beams: Vec<models::beam::Beam>,
     rocks: Vec<models::rock::Rock>,
 }
@@ -47,16 +50,7 @@ impl App {
             let transform = c.transform.trans(x, y).trans(-ship.x, -ship.y);
 
             // SHIP
-            let ship = &[
-                [0.0, 0.0],
-                [40.0, 0.0],
-                [30.0, -10.0],
-                [30.0, -20.0],
-                [20.0, -30.0],
-                [10.0, -20.0],
-                [10.0, -10.0],
-                [0.0, 0.0],
-            ];
+            let ship = ship.vectors();
 
             const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
             const GREEN: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
@@ -111,12 +105,7 @@ impl App {
         }
 
         if ((args.dt * 10000000.0) as i64) % 8 == 0 {
-            let new_rock = models::rock::Rock {
-                x: -40.0,
-                y: 150.0,
-                shape: Vec::new(),
-            };
-
+            let new_rock: models::rock::Rock = ShapeGeometry::new(-40.0, 150.0);
             self.rocks.push(new_rock);
         }
 
@@ -138,7 +127,7 @@ fn main() {
     // Create a new game and run it.
     let mut app = App {
         gl: GlGraphics::new(opengl),
-        ship: models::ship::Ship { x: 0.0, y: 0.0 },
+        ship: ShapeGeometry::new(0.0, 0.0),
         beams: Vec::new(),
         rocks: Vec::new(),
     };
