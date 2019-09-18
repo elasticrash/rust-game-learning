@@ -9,6 +9,8 @@ piston = "0.49.0"
 piston2d-graphics = "0.34.0"
 piston2d-opengl_graphics = "0.68.0"
 piston2d-touch_visualizer = "0.23.0"
+rand = "0.7.2"
+log = "0.4.8"
 
 [dependencies.pistoncore-sdl2_window]
 version = "0.63.0"

@@ -2,7 +2,6 @@ pub mod beam;
 pub mod rock;
 pub mod shape;
 pub mod ship;
-
 use rock::Rock as SpaceRock;
 use ship::Ship as SpaceShip;
 

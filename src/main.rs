@@ -1,7 +1,11 @@
 extern crate graphics;
 extern crate opengl_graphics;
 extern crate piston;
+extern crate rand;
 extern crate touch_visualizer;
+
+use rand::prelude::ThreadRng;
+use rand::Rng;
 
 #[cfg(feature = "include_glfw")]
 extern crate glfw_window;
@@ -20,8 +24,10 @@ use piston::input::*;
 use piston::window::WindowSettings;
 #[cfg(feature = "include_sdl2")]
 use sdl2_window::Sdl2Window as AppWindow;
+
 mod models;
 
+use models::rock::Rock as SpaceRock;
 use models::shape::Shape as ShapeGeometry;
 use models::ship::Ship as SpaceShip;
 
@@ -29,7 +35,8 @@ pub struct App {
     gl: GlGraphics, // OpenGL drawing backend.
     ship: SpaceShip,
     beams: Vec<models::beam::Beam>,
-    rocks: Vec<models::rock::Rock>,
+    rocks: Vec<SpaceRock>,
+    random: ThreadRng,
 }
 
 impl App {
@@ -41,6 +48,7 @@ impl App {
         let ship = &self.ship;
         let beams = &self.beams;
         let rocks = &self.rocks;
+
         let (x, y) = (args.window_size[0] / 2.0, args.window_size[1] / 2.0);
 
         self.gl.draw(args.viewport(), |c, gl| {
@@ -83,8 +91,24 @@ impl App {
             //BEAM
             for rock in rocks {
                 let rock_transform = c.transform.trans(x, y).trans(rock.x, -rock.y);
-                let square = rectangle::square(20.0, -30.0, 15.0);
-                rectangle(RED, square, rock_transform, gl);
+                let local_rock = rock.vectors();
+                let mut i = 0;
+
+                while i <= local_rock.len() - 2 {
+                    line(
+                        RED,
+                        2.0,
+                        [
+                            local_rock[i][0],
+                            local_rock[i][1],
+                            local_rock[i + 1][0],
+                            local_rock[i + 1][1],
+                        ],
+                        rock_transform,
+                        gl,
+                    );
+                    i = i + 1;
+                }
             }
         });
     }
@@ -104,8 +128,9 @@ impl App {
             beam.y += 50.0 * args.dt;
         }
 
-        if ((args.dt * 10000000.0) as i64) % 8 == 0 {
-            let new_rock: models::rock::Rock = ShapeGeometry::new(-40.0, 150.0);
+        if (self.random.gen_range(0, 100)) == 5 {
+            let new_rock: models::rock::Rock =
+                ShapeGeometry::new(self.random.gen_range(-100.0, 82.0), 150.0);
             self.rocks.push(new_rock);
         }
 
@@ -130,6 +155,7 @@ fn main() {
         ship: ShapeGeometry::new(0.0, 0.0),
         beams: Vec::new(),
         rocks: Vec::new(),
+        random: rand::thread_rng(),
     };
 
     let mut _move: f64 = 0.0;
