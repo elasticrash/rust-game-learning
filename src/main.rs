@@ -124,8 +124,9 @@ impl App {
     }
 
     fn update(&mut self, args: &UpdateArgs) {
+        const SPEED:f64 = 50.0;
         for beam in &mut self.beams {
-            beam.y += 50.0 * args.dt;
+            beam.y += SPEED * args.dt;
         }
 
         if (self.random.gen_range(0, 100)) == 5 {
@@ -135,7 +136,7 @@ impl App {
         }
 
         for rock in &mut self.rocks {
-            rock.y -= 50.0 * args.dt;
+            rock.y -= SPEED * args.dt;
         }
     }
 }
