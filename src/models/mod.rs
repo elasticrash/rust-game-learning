@@ -32,6 +32,12 @@ impl shape::Shape for SpaceRock {
     }
 }
 
+impl PartialEq for SpaceRock {
+    fn eq(&self, other: &Self) -> bool {
+        self.y == other.y
+    }
+}
+
 impl shape::Shape for SpaceShip {
     fn vectors(&self) -> [[f64; 2]; 8] {
         return [

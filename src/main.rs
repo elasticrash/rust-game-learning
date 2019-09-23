@@ -14,8 +14,6 @@ extern crate glutin_window;
 #[cfg(feature = "include_sdl2")]
 extern crate sdl2_window;
 
-#[cfg(feature = "include_glfw")]
-use glfw_window::GlfwWindow as AppWindow;
 #[cfg(feature = "include_glutin")]
 use glutin_window::GlutinWindow as AppWindow;
 use opengl_graphics::{GlGraphics, OpenGL};
@@ -32,6 +30,8 @@ use models::shape::Shape as ShapeGeometry;
 use models::ship::Ship as SpaceShip;
 
 pub struct App {
+    width: f64,
+    height: f64,
     gl: GlGraphics, // OpenGL drawing backend.
     ship: SpaceShip,
     beams: Vec<models::beam::Beam>,
@@ -124,7 +124,8 @@ impl App {
     }
 
     fn update(&mut self, args: &UpdateArgs) {
-        const SPEED:f64 = 50.0;
+        const SPEED: f64 = 50.0;
+
         for beam in &mut self.beams {
             beam.y += SPEED * args.dt;
         }
@@ -138,13 +139,26 @@ impl App {
         for rock in &mut self.rocks {
             rock.y -= SPEED * args.dt;
         }
+
+        let mut remove_vectors = Vec::new();
+        for (i, rock) in self.rocks.iter().enumerate() {
+            if rock.y < -self.height/2.0 {
+                remove_vectors.push(i);
+            }
+        }
+
+        for r_vector in remove_vectors {
+            self.rocks.remove(r_vector);
+        }
     }
 }
 
 fn main() {
     // Change this to OpenGL::V2_1 if not working.
+    let width = 400;
+    let height = 400;
     let opengl = OpenGL::V3_2;
-    let mut window: AppWindow = WindowSettings::new("piston-example-user_input", [400, 400])
+    let mut window: AppWindow = WindowSettings::new("piston-example-user_input", [width, height])
         .exit_on_esc(true)
         .graphics_api(opengl)
         .build()
@@ -152,6 +166,8 @@ fn main() {
 
     // Create a new game and run it.
     let mut app = App {
+        width: width as f64,
+        height: height as f64,
         gl: GlGraphics::new(opengl),
         ship: ShapeGeometry::new(0.0, 0.0),
         beams: Vec::new(),
